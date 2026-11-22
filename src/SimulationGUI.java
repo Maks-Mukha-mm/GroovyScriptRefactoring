@@ -130,7 +130,10 @@ public class SimulationGUI extends JFrame {
             ctl.readDataFrom(dataFile).runModel();
             results = ctl.getResultsAsTsv();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+            statusLabel.setText("Status: Error - " + cause.getMessage());
+            JOptionPane.showMessageDialog(this, cause.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         final String finalResults = results;
@@ -173,7 +176,10 @@ public class SimulationGUI extends JFrame {
             }
             results = ctl.getResultsAsTsv();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+            statusLabel.setText("Status: Error - " + cause.getMessage());
+            JOptionPane.showMessageDialog(this, cause.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         final String finalResults = results;

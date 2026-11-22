@@ -6,7 +6,7 @@ import javax.script.*;
 public class Controller {
     private Object model;
     private Class<?> modelClass;
-    private Map<String, double[]> bindFields = new HashMap<>();
+    private Map<String, double[]> bindFields = new LinkedHashMap<>();
     private int LL;
     private List<String> lataYears = new ArrayList<>();
     private ScriptEngine scriptEngine;
@@ -91,6 +91,13 @@ public class Controller {
 
     public Controller runModel() throws Exception {
         modelClass.getMethod("run").invoke(model);
+        // The model may assign new arrays (e.g. PKB = new double[LL]),
+        // so read the bound fields back instead of keeping the old references.
+        for (String fieldName : new ArrayList<>(bindFields.keySet())) {
+            Field field = modelClass.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            bindFields.put(fieldName, (double[]) field.get(model));
+        }
         return this;
     }
 
@@ -112,7 +119,13 @@ public class Controller {
         return this;
     }
 
-    private boolean isSingleLowercase(String varName) {
+    private static String format(double value) {
+        // Ratios and growth rates need more precision than absolute values.
+        String pattern = Math.abs(value) < 10 ? "%.3f" : "%.1f";
+        return String.format(Locale.ROOT, pattern, value);
+    }
+
+        private boolean isSingleLowercase(String varName) {
         return varName.matches("^[a-z]$");
     }
 
@@ -137,7 +150,7 @@ public class Controller {
         for (Map.Entry<String, double[]> entry : bindFields.entrySet()) {
             tsv.append(entry.getKey());
             for (double value : entry.getValue()) {
-                tsv.append("\t").append(value);
+                tsv.append("\t").append(format(value));
             }
             tsv.append("\n");
         }
